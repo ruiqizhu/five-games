@@ -1,0 +1,36 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Flappy Blob</title>
+<style>body{margin:0;background:#1d1b3a;color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;touch-action:none;user-select:none}
+canvas{border-radius:12px;box-shadow:0 0 40px #6f96;max-width:96vw;max-height:88vh}#hud{display:flex;gap:22px;margin:6px;font-weight:700}</style></head><body>
+<div id="hud"><span>Best <b id="bs">0</b></span><span style="opacity:.6">Click / Space / Tap to flap · M: sound</span></div><canvas id="c" width="480" height="640"></canvas>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d'),W=480,H=640;let ac,muted=false;
+function snd(f,d=.1,t='sine',f2){if(muted)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.setValueAtTime(f,ac.currentTime);if(f2)o.frequency.exponentialRampToValueAtTime(f2,ac.currentTime+d);g.gain.setValueAtTime(.1,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+const ls={g(k){try{return+localStorage.getItem(k)||0}catch(e){return 0}},s(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let best=ls.g('flappyBest');bs.textContent=best;let b,pipes,score,state='start',parts=[],fr=0,shake=0,gx=0,overT=0;
+const hills=Array.from({length:8},(_,i)=>({x:i*90,h:60+Math.random()*80}));
+function reset(){b={y:H/2,vy:0,sq:1};pipes=[];score=0;parts=[];state='play';fr=0}
+function flap(){if(state=='start'||state=='over'&&overT<=0){reset()}if(state=='play'){b.vy=-7.2;b.sq=1.4;snd(500,.12,'sine',900);for(let i=0;i<6;i++)parts.push({x:110,y:b.y+12,vx:-Math.random()*2,vy:Math.random()*2,l:.8,c:'#bfb'})}}
+function die(){if(state!='play')return;state='over';overT=40;shake=14;snd(300,.5,'sawtooth',60);for(let i=0;i<40;i++){const a=Math.random()*6.28,s=Math.random()*6;parts.push({x:120,y:b.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1,c:'#6f9'})}if(score>best){best=score;ls.s('flappyBest',best);bs.textContent=best}}
+function update(){fr++;b.vy+=.42;b.y+=b.vy;b.sq+=(1-b.sq)*.2;const gap=Math.max(140,190-score*2),sp=2.6+Math.min(score*.05,2);
+if(fr%Math.round(230/sp)==0){pipes.push({x:W,t:70+Math.random()*(H-140-gap-60),g:gap,h:Math.random()*360})}
+for(const p of pipes){p.x-=sp;if(!p.s&&p.x+60<120){p.s=1;score++;snd(880,.08,'square');snd(1320,.12,'square')}
+if(120+16>p.x&&120-16<p.x+60&&(b.y-16<p.t||b.y+16>p.t+p.g))die()}pipes=pipes.filter(p=>p.x>-70);if(b.y>H-60||b.y<-40)die()}
+function draw(){x.save();if(shake>.5){x.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.88}
+const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#3a2c7a');g.addColorStop(1,'#f79c6a');x.fillStyle=g;x.fillRect(-20,-20,W+40,H+40);
+x.fillStyle='#fff3';x.beginPath();x.arc(360,140,50,0,7);x.fill();if(state!='over')gx=(gx+1)%720;
+x.fillStyle='#5a3f8f';hills.forEach(h=>{const hx=((h.x-gx*.3)%720+720)%720-90;x.beginPath();x.ellipse(hx,H-60,80,h.h,0,Math.PI,0);x.fill()});
+if(pipes)for(const p of pipes){const col=`hsl(${p.h},70%,55%)`;x.fillStyle=col;x.fillRect(p.x,-10,60,p.t+10);x.fillRect(p.x,p.t+p.g,60,H);x.fillStyle='#fff3';x.fillRect(p.x+8,-10,8,p.t+10);x.fillRect(p.x+8,p.t+p.g,8,H);
+x.fillStyle=col;x.fillRect(p.x-5,p.t-20,70,20);x.fillRect(p.x-5,p.t+p.g,70,20)}
+x.fillStyle='#2b6';x.fillRect(0,H-60,W,60);x.fillStyle='#3c7';for(let i=0;i<14;i++)x.fillRect(((i*40-gx*2.6)%560+560)%560-40,H-60,20,8);
+parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.15;p.l-=.03});parts=parts.filter(p=>p.l>0);parts.forEach(p=>{x.globalAlpha=p.l;x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,3,0,7);x.fill()});x.globalAlpha=1;
+const by=b?b.y:H/2+Math.sin(Date.now()/300)*14,sq=b?b.sq:1,rot=b?Math.max(-.5,Math.min(1,b.vy/10)):0;
+if(state!='over'||overT>30){x.save();x.translate(120,by);x.rotate(rot);x.scale(1/Math.sqrt(sq),sq>1?1/sq*1.2:1);x.fillStyle='#6f9';x.shadowColor='#6f9';x.shadowBlur=18;x.beginPath();x.ellipse(0,0,20,17,0,0,7);x.fill();x.shadowBlur=0;
+x.fillStyle='#fff';x.beginPath();x.arc(7,-5,6,0,7);x.fill();x.fillStyle='#000';x.beginPath();x.arc(9,-5,3,0,7);x.fill();x.fillStyle='#f69';x.beginPath();x.ellipse(14,5,6,3,0,0,7);x.fill();x.restore()}
+x.textAlign='center';x.fillStyle='#fff';x.strokeStyle='#0008';x.lineWidth=6;
+const T=(s,y,z)=>{x.font=`bold ${z}px sans-serif`;x.strokeText(s,W/2,y);x.fillText(s,W/2,y)};
+if(state=='play')T(score,80,56);if(state=='start'){T('Flappy Blob',200,54);T('Click / Space / Tap to flap',270,22);T('Fly through the gaps!',300,22)}
+if(state=='over'){overT--;x.fillStyle='#0007';x.fillRect(60,180,W-120,260);x.fillStyle='#fff';T('Game Over',240,46);T('Score: '+score,300,28);T('Best: '+best,340,28);if(overT<=0)T('Click / Space / R to restart',400,20)}x.restore()}
+function loop(){if(state=='play')update();draw();requestAnimationFrame(loop)}
+addEventListener('keydown',e=>{if(e.code=='Space'||e.key=='ArrowUp'||e.key=='w'){e.preventDefault();flap()}if((e.key=='r'||e.key=='R')&&state=='over'){overT=0;flap()}if(e.key=='m')muted=!muted});
+c.addEventListener('mousedown',flap);c.addEventListener('touchstart',e=>{e.preventDefault();flap()},{passive:false});loop();
+</script></body></html>
