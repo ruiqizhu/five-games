@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Space Dodger</title>
+<style>body{margin:0;background:#000;color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;touch-action:none}
+canvas{border-radius:12px;box-shadow:0 0 40px #6af6;max-width:96vw;max-height:84vh}#hud{display:flex;gap:22px;margin:8px;font-weight:700}.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000a;text-align:center}.hide{display:none}button{font-size:20px;padding:10px 28px;border:0;border-radius:30px;background:linear-gradient(90deg,#6af,#c6f);color:#fff;cursor:pointer;margin-top:12px}h1{margin:0 0 8px;font-size:44px;background:linear-gradient(90deg,#6af,#f6c);-webkit-background-clip:text;color:transparent}</style></head><body>
+<div id="hud"><span>Time <b id="sc">0.0</b>s</span><span>Best <b id="bs">0.0</b>s</span><span style="opacity:.6">M: sound</span></div>
+<canvas id="c" width="800" height="600"></canvas>
+<div id="start" class="ov"><h1>Space Dodger</h1><p>Steer with Arrows / WASD, or move the mouse / finger.<br>Dodge the asteroids — they get faster. Survive as long as you can!</p><button id="go">Launch (Space)</button></div>
+<div id="over" class="ov hide"><h1>Ship Destroyed</h1><p id="fin"></p><button id="re">Restart (R / Space)</button></div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d'),W=800,H=600;let ac,muted=false;
+function snd(f,d=.1,t='sawtooth'){if(muted)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.setValueAtTime(f,ac.currentTime);o.frequency.exponentialRampToValueAtTime(f/4,ac.currentTime+d);g.gain.setValueAtTime(.1,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+const ls={g(k){try{return+localStorage.getItem(k)||0}catch(e){return 0}},s(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let best=ls.g('dodgerBest');bs.textContent=best.toFixed(1);
+const stars=Array.from({length:150},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*3+.5}));
+let ship,rocks,t,state='start',parts=[],keys={},mouse=null,spawn=0,shake=0,last=0,milestone=10;
+function reset(){ship={x:W/2,y:H-80,vx:0,vy:0};rocks=[];t=0;spawn=0;parts=[];milestone=10;mouse=null;state='play';start.classList.add('hide');over.classList.add('hide')}
+function rock(){const r=14+Math.random()*30,pts=[];for(let i=0;i<10;i++)pts.push(r*(.7+Math.random()*.4));const sp=2+t*.08+Math.random()*2;rocks.push({x:Math.random()*W,y:-r,r,pts,vx:(Math.random()-.5)*1.5,vy:sp,a:0,va:(Math.random()-.5)*.08,h:Math.random()*60+10})}
+function burst(px,py,col,n,s=5){for(let i=0;i<n;i++){const a=Math.random()*6.28,v=Math.random()*s;parts.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,col})}}
+function update(dt){t+=dt;sc.textContent=t.toFixed(1);if(t>milestone){milestone+=10;snd(880,.2,'triangle')}
+const ax=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0),ay=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);
+if(ax||ay){ship.vx+=ax*1.1;ship.vy+=ay*1.1;mouse=null}else if(mouse){ship.vx+=(mouse.x-ship.x)*.03;ship.vy+=(mouse.y-ship.y)*.03}
+ship.vx*=.85;ship.vy*=.85;ship.x=Math.max(16,Math.min(W-16,ship.x+ship.vx));ship.y=Math.max(20,Math.min(H-20,ship.y+ship.vy));
+parts.push({x:ship.x+(Math.random()-.5)*6,y:ship.y+18,vx:0,vy:3+Math.random()*2,l:.6,col:Math.random()<.5?'#fa3':'#ff6'});
+spawn-=dt;if(spawn<=0){rock();spawn=Math.max(.12,.7-t*.012)}
+for(const r of rocks){r.x+=r.vx;r.y+=r.vy;r.a+=r.va;if(Math.hypot(r.x-ship.x,r.y-ship.y)<r.r*.85+12)return die()}rocks=rocks.filter(r=>r.y<H+60)}
+function die(){state='over';shake=20;snd(200,.8);burst(ship.x,ship.y,'#fa3',60,8);burst(ship.x,ship.y,'#6af',30,6);if(t>best){best=t;ls.s('dodgerBest',best);bs.textContent=best.toFixed(1)}
+fin.innerHTML=`You survived ${t.toFixed(1)}s<br>Best: ${best.toFixed(1)}s`;setTimeout(()=>over.classList.remove('hide'),700)}
+function draw(){x.save();if(shake>.5){x.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.9}
+x.fillStyle='#030614';x.fillRect(-30,-30,W+60,H+60);const sp=state=='play'?1+t*.05:1;
+for(const s of stars){s.y+=s.z*sp;if(s.y>H){s.y=0;s.x=Math.random()*W}x.fillStyle=`rgba(200,220,255,${s.z/3.5})`;x.fillRect(s.x,s.y,s.z,s.z*Math.min(sp,4))}
+if(rocks)for(const r of rocks){x.save();x.translate(r.x,r.y);x.rotate(r.a);x.beginPath();r.pts.forEach((p,i)=>{const a=i/10*6.283;x.lineTo(Math.cos(a)*p,Math.sin(a)*p)});x.closePath();x.fillStyle=`hsl(${r.h},35%,35%)`;x.fill();x.strokeStyle=`hsl(${r.h},60%,65%)`;x.lineWidth=2;x.stroke();x.restore()}
+parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.l-=.03});parts=parts.filter(p=>p.l>0);parts.forEach(p=>{x.globalAlpha=p.l;x.fillStyle=p.col;x.beginPath();x.arc(p.x,p.y,3,0,7);x.fill()});x.globalAlpha=1;
+if(state=='play'){x.save();x.translate(ship.x,ship.y);x.rotate(ship.vx*.04);x.shadowColor='#6af';x.shadowBlur=20;x.fillStyle='#cdf';x.beginPath();x.moveTo(0,-20);x.lineTo(14,16);x.lineTo(0,9);x.lineTo(-14,16);x.closePath();x.fill();x.fillStyle='#38f';x.beginPath();x.ellipse(0,-3,4,7,0,0,7);x.fill();x.restore()}x.restore()}
+function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;if(state=='play')update(dt);draw();requestAnimationFrame(loop)}
+function mp(cx,cy){const r=c.getBoundingClientRect();mouse={x:(cx-r.left)*W/r.width,y:(cy-r.top)*H/r.height}}
+c.addEventListener('mousemove',e=>mp(e.clientX,e.clientY));c.addEventListener('touchmove',e=>{mp(e.touches[0].clientX,e.touches[0].clientY);e.preventDefault()},{passive:false});
+addEventListener('keydown',e=>{const k=e.key.length==1?e.key.toLowerCase():e.key;keys[k]=1;if(k.startsWith('Arrow')||k==' ')e.preventDefault();if((k==' '||k=='r')&&state!='play')reset();if(k=='m')muted=!muted});
+addEventListener('keyup',e=>{keys[e.key.length==1?e.key.toLowerCase():e.key]=0});go.onclick=re.onclick=reset;requestAnimationFrame(loop);
+</script></body></html>
