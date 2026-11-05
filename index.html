@@ -1,10 +1,200 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Five Games</title>
-<style>body{margin:0;min-height:100vh;background:linear-gradient(135deg,#1a1040,#0b3050);color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:30px;box-sizing:border-box}
-h1{font-size:48px;background:linear-gradient(90deg,#6f6,#3cf,#f6a,#fc3);-webkit-background-clip:text;color:transparent;margin:10px}.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;max-width:1100px;width:100%}
-a{display:block;padding:22px;border-radius:18px;background:#ffffff14;color:#fff;text-decoration:none;transition:.2s;border:1px solid #fff2}a:hover{transform:translateY(-6px) scale(1.02);background:#ffffff26;box-shadow:0 10px 30px #0006}a b{font-size:24px;display:block;margin-bottom:6px}span{opacity:.8}</style></head><body>
-<h1>🎮 Five Games</h1><p>Pick a game — everything runs offline in your browser. Best scores are saved locally.</p><div class="g">
-<a href="snake-rush.html"><b>🐍 Snake Rush</b><span>A snake that speeds up as it grows. Later levels add walls, plus ghost, magnet, and shrink pickups.</span></a>
-<a href="brick-breaker.html"><b>🧱 Brick Breaker</b><span>Smash bricks with multiball, wide, laser, and sticky drops. Unbreakable and exploding bricks, and a boss every few levels.</span></a>
-<a href="space-dodger.html"><b>🚀 Space Dodger</b><span>Dodge a faster asteroid field, homing mines, and rocks that split. Grab coins, a shield, and a short laser.</span></a>
-<a href="memory-match.html"><b>🧠 Memory Match</b><span>Easy, medium, or hard grids, animal, food, or space decks, and a local 2-player mode.</span></a>
-<a href="flappy-blob.html"><b>🟢 Flappy Blob</b><span>Flap through gaps that start to weave, grab coins and a one-hit shield, and watch the sky change as you climb.</span></a></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Five Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#081018;
+  --fog:#d7e6df;
+  --mint:#2ec4a8;
+  --coral:#ff6b45;
+  --gold:#f0c75e;
+  --sky:#4db7ff;
+  --lilac:#b48cff;
+  --lime:#7ad66f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  color:var(--fog);
+  font-family:Sora,sans-serif;
+  background:
+    radial-gradient(1200px 700px at 12% -10%,#1a4a4a55,transparent 55%),
+    radial-gradient(900px 600px at 90% 10%,#4a2a1855,transparent 50%),
+    radial-gradient(700px 500px at 70% 90%,#16385a66,transparent 55%),
+    linear-gradient(160deg,#071018 0%,#0c1c24 45%,#101820 100%);
+  overflow-x:hidden;
+}
+.atmosphere{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 10% 20%,#fff3 0,#fff0 100%),
+    radial-gradient(1px 1px at 30% 70%,#fff2 0,#fff0 100%),
+    radial-gradient(1.5px 1.5px at 55% 35%,#fff3 0,#fff0 100%),
+    radial-gradient(1px 1px at 78% 18%,#fff2 0,#fff0 100%),
+    radial-gradient(1.5px 1.5px at 88% 62%,#fff3 0,#fff0 100%),
+    radial-gradient(1px 1px at 42% 88%,#fff2 0,#fff0 100%);
+  animation:drift 28s linear infinite;
+}
+.grid-fade{
+  position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.18;
+  background-image:
+    linear-gradient(#ffffff0d 1px,transparent 1px),
+    linear-gradient(90deg,#ffffff0d 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at 50% 30%,#000 20%,transparent 70%);
+}
+@keyframes drift{to{transform:translateY(-40px)}}
+@keyframes rise{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:none}
+}
+@keyframes shimmer{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+.wrap{
+  position:relative;z-index:1;
+  width:min(1100px,100%);
+  margin:0 auto;
+  padding:clamp(36px,8vh,72px) 24px 56px;
+}
+.hero{
+  text-align:center;
+  margin-bottom:clamp(28px,5vh,48px);
+  animation:rise .7s ease both;
+}
+.brand{
+  margin:0;
+  font-family:Fraunces,serif;
+  font-weight:800;
+  font-size:clamp(52px,10vw,96px);
+  letter-spacing:-.03em;
+  line-height:.95;
+  background:linear-gradient(110deg,var(--mint),var(--sky),var(--gold),var(--coral));
+  background-size:220% 220%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:shimmer 8s ease-in-out infinite;
+}
+.tag{
+  margin:18px auto 0;
+  max-width:38ch;
+  font-size:clamp(15px,2.2vw,18px);
+  line-height:1.55;
+  color:#c5d5cc;
+  animation:rise .8s .12s ease both;
+}
+.games{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  animation:rise .85s .2s ease both;
+}
+a.game{
+  --accent:var(--mint);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  min-height:180px;
+  padding:22px 20px 20px;
+  text-decoration:none;
+  color:inherit;
+  border:1px solid #ffffff18;
+  border-radius:4px 22px 4px 22px;
+  background:
+    linear-gradient(160deg,#ffffff10,#ffffff05),
+    linear-gradient(180deg,transparent 40%,#0006);
+  overflow:hidden;
+  transition:transform .25s ease,border-color .25s ease,background .25s ease;
+}
+a.game::before{
+  content:"";
+  position:absolute;inset:0 auto 0 0;width:4px;
+  background:var(--accent);
+  transform:scaleY(.35);
+  transform-origin:bottom;
+  transition:transform .3s ease;
+}
+a.game::after{
+  content:"";
+  position:absolute;right:-20%;top:-30%;
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--accent) 35%,transparent),transparent 70%);
+  opacity:.55;
+  transition:transform .35s ease,opacity .35s ease;
+}
+a.game:hover,a.game:focus-visible{
+  transform:translateY(-5px);
+  border-color:color-mix(in srgb,var(--accent) 55%,#fff3);
+  outline:none;
+}
+a.game:hover::before,a.game:focus-visible::before{transform:scaleY(1)}
+a.game:hover::after,a.game:focus-visible::after{transform:translate(-12px,18px) scale(1.15);opacity:.85}
+a.game b{
+  position:relative;z-index:1;
+  font-family:Fraunces,serif;
+  font-size:clamp(22px,3vw,28px);
+  font-weight:700;
+  letter-spacing:-.02em;
+  margin:0 0 8px;
+  display:block;
+}
+a.game span{
+  position:relative;z-index:1;
+  font-size:13.5px;
+  line-height:1.45;
+  color:#b7c7be;
+}
+a.game .mark{
+  position:absolute;top:16px;right:18px;z-index:1;
+  width:38px;height:38px;border-radius:50%;
+  border:1.5px solid color-mix(in srgb,var(--accent) 70%,#fff);
+  display:grid;place-items:center;
+  font-size:12px;font-weight:700;letter-spacing:.04em;
+  color:var(--accent);
+  background:#0004;
+}
+.snake{--accent:var(--lime)}
+.brick{--accent:var(--coral)}
+.space{--accent:var(--sky)}
+.memory{--accent:var(--gold)}
+.flappy{--accent:var(--lilac)}
+.foot{
+  margin-top:36px;
+  text-align:center;
+  font-size:13px;
+  color:#7f9188;
+  animation:rise .9s .28s ease both;
+}
+@media (max-width:560px){
+  a.game{min-height:150px;border-radius:4px 16px 4px 16px}
+}
+</style>
+</head>
+<body>
+<div class="atmosphere" aria-hidden="true"></div>
+<div class="grid-fade" aria-hidden="true"></div>
+<main class="wrap">
+  <header class="hero">
+    <h1 class="brand">Five Games</h1>
+    <p class="tag">Pick a game — everything runs offline in your browser. Best scores stay on this device.</p>
+  </header>
+  <nav class="games" aria-label="Games">
+    <a class="game snake" href="snake-rush.html"><span class="mark">01</span><b>Snake Rush</b><span>Speed, walls, and wild pickups as the snake grows.</span></a>
+    <a class="game brick" href="brick-breaker.html"><span class="mark">02</span><b>Brick Breaker</b><span>Multiball, lasers, sticky paddles, and boss levels.</span></a>
+    <a class="game space" href="space-dodger.html"><span class="mark">03</span><b>Space Dodger</b><span>Asteroids, mines, coins, and a short-lived laser.</span></a>
+    <a class="game memory" href="memory-match.html"><span class="mark">04</span><b>Memory Match</b><span>Grids, decks, and local two-player duels.</span></a>
+    <a class="game flappy" href="flappy-blob.html"><span class="mark">05</span><b>Flappy Blob</b><span>Weave gaps, grab coins, and climb shifting skies.</span></a>
+  </nav>
+  <p class="foot">No installs · Sound toggle with M in every game</p>
+</main>
+</body>
+</html>
